@@ -6,13 +6,6 @@ import '../screens/product_detail_screen.dart';
 import '../providers/cart_provider.dart';
 
 class ProductItem extends StatelessWidget {
-  // final Product product;
-
-  // const ProductItem({
-  //   Key key,
-  //   @required this.product,
-  // }) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context, listen: false);
@@ -49,7 +42,21 @@ class ProductItem extends StatelessWidget {
               Icons.shopping_cart,
               color: Theme.of(context).accentColor,
             ),
-            onPressed: () => cartProvider.addItem(product),
+            onPressed: () {
+              final cartItem = cartProvider.addItem(product);
+              Scaffold.of(context).hideCurrentSnackBar();
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text("Added item to cart!"),
+                action: SnackBarAction(
+                  label: "Undo",
+                  onPressed: () => cartProvider.removeItem(
+                    cartItem,
+                    quantityToRemove: 1,
+                  ),
+                ),
+                duration: Duration(seconds: 2),
+              ));
+            },
           ),
           title: Text(
             product.title,

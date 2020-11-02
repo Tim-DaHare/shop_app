@@ -33,7 +33,7 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
-  void addItem(Product product) {
+  ShoppingCartItem addItem(Product product) {
     var existingItem = _items.firstWhere(
       (cItem) => cItem.product.id == product.id,
       orElse: () => null,
@@ -41,15 +41,35 @@ class CartProvider with ChangeNotifier {
 
     if (existingItem != null) {
       existingItem.quantity += 1;
-      return;
+      return existingItem;
     }
 
-    _items.add(ShoppingCartItem(product: product, quantity: 1));
+    final cartItem = ShoppingCartItem(product: product, quantity: 1);
+
+    _items.add(cartItem);
     notifyListeners();
+
+    return cartItem;
   }
 
-  void removeItem(ShoppingCartItem cartItem) {
-    _items.remove(cartItem);
+  void removeItem(ShoppingCartItem cartItem, {int quantityToRemove}) {
+    // Remove only the selected quantity
+    if (quantityToRemove != null) {
+      final itemIndex = _items.indexOf(cartItem);
+
+      if (itemIndex < 0)
+        return; // do nothing if cartItem is not included in list
+
+      final newQuantity = _items[itemIndex].quantity - quantityToRemove;
+      newQuantity > 0
+          ? _items[itemIndex].quantity = newQuantity
+          : _items.remove(cartItem);
+    }
+    // Just remove the entire cart item from the cart
+    else {
+      _items.remove(cartItem);
+    }
+
     notifyListeners();
   }
 
