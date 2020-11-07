@@ -41,6 +41,8 @@ class OrderProvider with ChangeNotifier {
   }
 
   void addOrder(List<ShoppingCartItem> products) {
+    const url = "https://flutter-shop-app-faab7.firebaseio.com/orders.json";
+
     _orders.add(OrderItem(
       id: '1',
       products: products,

@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/product.dart';
 
@@ -46,42 +50,123 @@ class ProductsProvider with ChangeNotifier {
     return _items.where((prod) => prod.isFavorite).toList();
   }
 
+  Future<void> fetchProducts() async {
+    const url = "https://flutter-shop-app-faab7.firebaseio.com/products.json";
+
+    try {
+      final response = await http.get(url);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      final List<Product> loadedProducts = [];
+      data.forEach((prodId, prodData) {
+        loadedProducts.add(Product(
+          id: prodId,
+          title: prodData["title"],
+          price: prodData["price"],
+          description: prodData["description"],
+          imageUrl: prodData["imageUrl"],
+          isFavorite: prodData["isFavorite"],
+        ));
+      });
+      _items = loadedProducts;
+      notifyListeners();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   Product findById(String id) {
     return _items.firstWhere((prod) => prod.id == id);
   }
 
-  Product addProduct({
-    @required String title,
-    @required double price,
-    @required String description,
-    @required String imageUrl,
-  }) {
-    final newProduct = Product(
-      id: DateTime.now().toString(), // Temporary id
-      title: title,
-      description: description,
-      price: price,
-      imageUrl: imageUrl,
-    );
+  Future<Product> addProduct(Product product) async {
+    const url = "https://flutter-shop-app-faab7.firebaseio.com/products.json";
 
-    _items.add(newProduct);
-    notifyListeners();
+    try {
+      final response = await http.post(
+        url,
+        body: jsonEncode({
+          'title': product.title,
+          'description': product.description,
+          'price': product.price,
+          'imageUrl': product.imageUrl,
+          'isFavorite': product.isFavorite,
+        }),
+      );
 
-    return newProduct;
+      final newProduct = Product(
+        id: jsonDecode(response.body)["name"],
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        isFavorite: product.isFavorite,
+      );
+
+      _items.add(newProduct);
+      notifyListeners();
+
+      return newProduct;
+    } catch (error) {
+      print(error);
+      throw error;
+    }
   }
 
-  Product editProduct(Product product) {
-    final productIndex = _items.indexWhere((prod) => prod.id == product.id);
-    if (productIndex < 0) return null;
+  Future<Product> editProduct(Product editedProduct) async {
+    final productIndex =
+        _items.indexWhere((prod) => prod.id == editedProduct.id);
+    if (productIndex < 0) return null; // product doesn't exist
 
-    _items[productIndex] = product;
-    notifyListeners();
+    final url =
+        "https://flutter-shop-app-faab7.firebaseio.com/products/${editedProduct.id}.json";
 
-    return _items[productIndex];
+    try {
+      final repsonse = await http.patch(
+        url,
+        body: jsonEncode({
+          "title": editedProduct.title,
+          "price": editedProduct.price,
+          "description": editedProduct.description,
+          "imageUrl": editedProduct.imageUrl,
+          "isFavorite": editedProduct.isFavorite,
+        }),
+      );
+      print(repsonse.body);
+
+      _items[productIndex] = editedProduct;
+      notifyListeners();
+
+      return editedProduct;
+    } catch (error) {
+      print(error);
+      throw error;
+    }
   }
 
-  void deleteProduct(Product product) {
-    _items.remove(product);
-    notifyListeners();
+  Future<void> deleteProduct(Product productToRemove) async {
+    final url =
+        "https://flutter-shop-app-faab7.firebaseio.com/products/${productToRemove.id}.json";
+
+    final productIndex = _items.indexOf(productToRemove);
+    if (productIndex < 0) return; // Product doest exist
+
+    try {
+      _items.remove(productToRemove);
+      notifyListeners(); // notify the optimistic update
+
+      final response = await http.delete(url);
+      if (response.statusCode >= 400) {
+        throw HttpException(
+          "Could not delete product: ${productToRemove.title}",
+        );
+      }
+    } catch (error) {
+      // Undo the optimistic update if the request fails
+      _items.insert(productIndex, productToRemove);
+      notifyListeners(); // notify the optimistic update
+
+      throw error;
+    }
   }
 }

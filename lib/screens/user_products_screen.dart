@@ -9,6 +9,14 @@ import '../widgets/app_drawer.dart';
 class UserProductsScreen extends StatelessWidget {
   static const String ROUTE_NAME = "/user_products";
 
+  Future<void> _onRefresh(BuildContext ctx) async {
+    try {
+      await Provider.of<ProductsProvider>(ctx, listen: false).fetchProducts();
+    } catch (error) {
+      print(error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final navigator = Navigator.of(context);
@@ -25,17 +33,20 @@ class UserProductsScreen extends StatelessWidget {
         ],
       ),
       drawer: AppDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ListView.builder(
-          itemCount: productsProvider.items.length,
-          itemBuilder: (_, index) => Column(
-            children: [
-              UserProductItem(
-                product: productsProvider.items[index],
-              ),
-              Divider(),
-            ],
+      body: RefreshIndicator(
+        onRefresh: () => _onRefresh(context),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: ListView.builder(
+            itemCount: productsProvider.items.length,
+            itemBuilder: (_, index) => Column(
+              children: [
+                UserProductItem(
+                  product: productsProvider.items[index],
+                ),
+                Divider(),
+              ],
+            ),
           ),
         ),
       ),

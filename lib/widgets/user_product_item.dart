@@ -19,12 +19,25 @@ class UserProductItem extends StatelessWidget {
       context,
       listen: false,
     );
+    final scaffold = Scaffold.of(context);
 
     void _onPressEdit() {
       Navigator.of(context).pushNamed(
         EditProductScreen.ROUTE_NAME,
         arguments: product,
       );
+    }
+
+    Future<void> _onPressDelete() async {
+      try {
+        await productProvider.deleteProduct(product);
+      } catch (e) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text("Deletion failed", textAlign: TextAlign.center),
+          ),
+        );
+      }
     }
 
     return ListTile(
@@ -44,7 +57,7 @@ class UserProductItem extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.delete),
               color: Theme.of(context).errorColor,
-              onPressed: () => productProvider.deleteProduct(product),
+              onPressed: _onPressDelete,
             ),
           ],
         ),
