@@ -59,27 +59,40 @@ class ProductsProvider with ChangeNotifier {
   }
 
   Future<void> fetchProducts() async {
-    final url =
+    final productsUrl =
         "https://flutter-shop-app-faab7.firebaseio.com/products.json?auth=${_authProvider.token}";
 
+    final favoritesUrl =
+        "https://flutter-shop-app-faab7.firebaseio.com/userFavorites/${_authProvider.userId}.json?auth=${_authProvider.token}";
+
     try {
-      final response = await http.get(url);
-      if (response.statusCode >= 300) {
+      final productsResponse = await http.get(productsUrl);
+      if (productsResponse.statusCode >= 300) {
         throw HttpException("Fetching products failed");
       }
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (data == null) return;
+      final productsData =
+          jsonDecode(productsResponse.body) as Map<String, dynamic>;
+      if (productsData == null) return;
+
+      final favoritesReponse = await http.get(favoritesUrl);
+      if (favoritesReponse.statusCode >= 300) {
+        throw HttpException("Fetching favorites failed");
+      }
+
+      final favoritesData =
+          jsonDecode(favoritesReponse.body) as Map<String, dynamic>;
 
       final List<Product> loadedProducts = [];
-      data.forEach((prodId, prodData) {
+      productsData.forEach((prodId, prodData) {
         loadedProducts.add(Product(
           id: prodId,
           title: prodData["title"],
           price: prodData["price"],
           description: prodData["description"],
           imageUrl: prodData["imageUrl"],
-          isFavorite: prodData["isFavorite"],
+          isFavorite:
+              favoritesData != null ? (favoritesData[prodId] ?? false) : false,
         ));
       });
       _items = loadedProducts;
@@ -106,7 +119,6 @@ class ProductsProvider with ChangeNotifier {
           'description': product.description,
           'price': product.price,
           'imageUrl': product.imageUrl,
-          'isFavorite': product.isFavorite,
         }),
       );
 
@@ -162,18 +174,16 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> toggleFavorite(Product product) async {
     final url =
-        "https://flutter-shop-app-faab7.firebaseio.com/products/${product.id}.json?auth=${_authProvider.token}";
+        "https://flutter-shop-app-faab7.firebaseio.com/userFavorites/${_authProvider.userId}/${product.id}.json?auth=${_authProvider.token}";
 
     final originalValue = product.isFavorite;
     product.isFavorite = !product.isFavorite;
     notifyListeners(); //optimistic update
 
     try {
-      final response = await http.patch(
+      final response = await http.put(
         url,
-        body: jsonEncode({
-          "isFavorite": product.isFavorite,
-        }),
+        body: jsonEncode(product.isFavorite),
       );
       if (response.statusCode >= 300) {
         throw HttpException(
