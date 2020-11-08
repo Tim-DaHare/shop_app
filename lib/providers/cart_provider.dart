@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:shop_app/models/product.dart';
-import 'package:shop_app/widgets/cart_item.dart';
 
 class ShoppingCartItem {
   final Product product;
