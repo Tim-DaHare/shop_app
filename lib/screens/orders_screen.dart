@@ -37,6 +37,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         future: _fetchOrdersFuture,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            print(snapshot.error);
             return Center(child: Text("Something went wrong!"));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
