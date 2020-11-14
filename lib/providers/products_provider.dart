@@ -58,9 +58,12 @@ class ProductsProvider with ChangeNotifier {
     _authProvider = newAuthProvider;
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts([bool filterForUser = false]) async {
+    final filterString = filterForUser
+        ? "&orderBy=\"userId\"&equalTo=\"${_authProvider.userId}\""
+        : "";
     final productsUrl =
-        "https://flutter-shop-app-faab7.firebaseio.com/products.json?auth=${_authProvider.token}";
+        "https://flutter-shop-app-faab7.firebaseio.com/products.json?auth=${_authProvider.token}$filterString";
 
     final favoritesUrl =
         "https://flutter-shop-app-faab7.firebaseio.com/userFavorites/${_authProvider.userId}.json?auth=${_authProvider.token}";
@@ -119,6 +122,7 @@ class ProductsProvider with ChangeNotifier {
           'description': product.description,
           'price': product.price,
           'imageUrl': product.imageUrl,
+          'userId': _authProvider.userId,
         }),
       );
 

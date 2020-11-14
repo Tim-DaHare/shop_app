@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/models/http_exception.dart';
-import 'package:shop_app/screens/products_overview_screen.dart';
 
 import '../providers/auth_provider.dart';
 
@@ -124,10 +123,10 @@ class _AuthCardState extends State<AuthCard> {
   }
 
   Future<void> _submit() async {
-    // if (!_formKey.currentState.validate()) {
-    //   // Invalid!
-    //   return;
-    // }
+    if (!_formKey.currentState.validate()) {
+      // Invalid!
+      return;
+    }
     _formKey.currentState.save();
     setState(() {
       _isLoading = true;
@@ -139,10 +138,8 @@ class _AuthCardState extends State<AuthCard> {
           context,
           listen: false,
         ).login(
-          // _authData["email"],
-          // _authData["password"],
-          'tim.de.haas@hotmail.nl',
-          'Testtest1',
+          _authData["email"],
+          _authData["password"],
         );
       } else {
         // Sign user up
@@ -155,6 +152,8 @@ class _AuthCardState extends State<AuthCard> {
         );
       }
     } on HttpException catch (error) {
+      setState(() => _isLoading = false);
+
       var errorMessage = "Authentication failed.";
       if (error.message.contains("EMAIL_EXISTS")) {
         errorMessage = "This email address is already in use.";
@@ -169,16 +168,11 @@ class _AuthCardState extends State<AuthCard> {
       }
       _showErrorDialog(errorMessage);
     } catch (error) {
+      setState(() => _isLoading = false);
+
       const errorMessage = "Could not authenticate you, please try again later";
       _showErrorDialog(errorMessage);
     }
-
-    Navigator.of(context)
-        .pushReplacementNamed(ProductsOverviewScreen.ROUTE_NAME);
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _switchAuthMode() {

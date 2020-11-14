@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/screens/splash_screen.dart';
 
 import './providers/auth_provider.dart';
 import './providers/products_provider.dart';
@@ -21,7 +22,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (ctx) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (ctx) => AuthProvider(provContext: ctx),
+        ),
         ChangeNotifierProxyProvider<AuthProvider, ProductsProvider>(
           create: (ctx) => ProductsProvider(),
           update: (ctx, authProvider, prevValue) =>
@@ -38,9 +41,16 @@ class MyApp extends StatelessWidget {
             accentColor: Colors.deepOrange,
             fontFamily: 'Lato',
           ),
-          initialRoute: authProvider.isAuth
-              ? ProductsOverviewScreen.ROUTE_NAME
-              : AuthScreen.ROUTE_NAME,
+          home: authProvider.isAuth
+              ? ProductsOverviewScreen()
+              : FutureBuilder(
+                  future: authProvider.tryAutoLogin(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting)
+                      return SplashScreen();
+                    return AuthScreen();
+                  },
+                ),
           routes: {
             AuthScreen.ROUTE_NAME: (_) => AuthScreen(),
             ProductsOverviewScreen.ROUTE_NAME: (_) => ProductsOverviewScreen(),
