@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/products_overview_screen.dart';
 import '../screens/orders_screen.dart';
-import '../screens/auth_screen.dart';
 import '../screens/user_products_screen.dart';
+import '../helpers/custom_route.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -14,13 +14,13 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         children: [
           AppBar(
-            title: Text("Hello friend"),
+            title: const Text("Hello friend"),
             automaticallyImplyLeading: false,
           ),
           Divider(),
           ListTile(
             leading: Icon(Icons.shop),
-            title: Text("Shop"),
+            title: const Text("Shop"),
             onTap: () {
               Navigator.of(context)
                   .pushReplacementNamed(ProductsOverviewScreen.ROUTE_NAME);
@@ -29,8 +29,11 @@ class AppDrawer extends StatelessWidget {
           Divider(),
           ListTile(
             leading: Icon(Icons.payment),
-            title: Text("Orders"),
+            title: const Text("Orders"),
             onTap: () {
+              // Navigator.of(context).pushReplacement(CustomRoute(
+              //   builder: (ctx) => OrdersScreen(),
+              // ));
               Navigator.of(context)
                   .pushReplacementNamed(OrdersScreen.ROUTE_NAME);
             },
@@ -38,7 +41,7 @@ class AppDrawer extends StatelessWidget {
           Divider(),
           ListTile(
             leading: Icon(Icons.payment),
-            title: Text("Manage Products"),
+            title: const Text("Manage Products"),
             onTap: () {
               Navigator.of(context)
                   .pushReplacementNamed(UserProductsScreen.ROUTE_NAME);
@@ -46,8 +49,8 @@ class AppDrawer extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.exit_to_app),
-            title: Text("Logout"),
+            leading: const Icon(Icons.exit_to_app),
+            title: const Text("Logout"),
             onTap: () {
               Provider.of<AuthProvider>(
                 context,
